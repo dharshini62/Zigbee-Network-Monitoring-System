@@ -12,7 +12,13 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        int nodeCount = 5;
+    	int nodeCount = 5;
+
+    	String parameter = System.getenv("NODE_COUNT");
+
+    	if (parameter != null && !parameter.trim().isEmpty()) {
+    	    nodeCount = Integer.parseInt(parameter);
+    	}
 
         List<ZigbeeNode> nodes = new ArrayList<>();
 
