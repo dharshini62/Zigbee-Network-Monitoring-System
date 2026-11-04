@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zigbee Network Monitoring</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #101827;
+            color: white;
+        }
+        h1 { color: #38bdf8; }
+        .cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin: 25px 0;
+        }
+        .card {
+            background: #1e293b;
+            padding: 22px;
+            border-radius: 12px;
+            min-width: 150px;
+            flex: 1;
+        }
+        .value {
+            font-size: 30px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e293b;
+        }
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #334155;
+            text-align: left;
+        }
+        th { color: #38bdf8; }
+        .online { color: #4ade80; }
+        .offline { color: #f87171; }
+        #message { color: #fbbf24; }
+    </style>
+</head>
+<body>
+
+    <h1>Zigbee Network Monitoring System</h1>
+    <p>Spring Boot Backend Monitoring Dashboard</p>
+    <p id="message">Connecting to backend...</p>
+
+    <div class="cards">
+        <div class="card">
+            Total Nodes
+            <div class="value" id="total">--</div>
+        </div>
+        <div class="card">
+            Online Nodes
+            <div class="value" id="online">--</div>
+        </div>
+        <div class="card">
+            Failed Nodes
+            <div class="value" id="failed">--</div>
+        </div>
+        <div class="card">
+            Reliability
+            <div class="value" id="reliability">--</div>
+        </div>
+    </div>
+
+    <h2>Sensor Node Details</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Node ID</th>
+                <th>Status</th>
+                <th>RSSI</th>
+                <th>Packets Sent</th>
+                <th>Packets Received</th>
+                <th>Delivery %</th>
+            </tr>
+        </thead>
+        <tbody id="nodeTable"></tbody>
+    </table>
+
+    <script>
+        async function loadNetworkData() {
+            try {
+                const response = await fetch('/api/network');
+
+                if (!response.ok) {
+                    throw new Error('Backend API error');
+                }
+
+                const data = await response.json();
+
+                document.getElementById('total').textContent = data.totalNodes;
+                document.getElementById('online').textContent = data.onlineNodes;
+                document.getElementById('failed').textContent = data.failedNodes;
+                document.getElementById('reliability').textContent =
+                    data.reliability.toFixed(2) + '%';
+
+                document.getElementById('nodeTable').innerHTML =
+                    data.nodes.map(node => `
+                        <tr>
+                            <td>${node.nodeId}</td>
+                            <td class="${node.status === 'ONLINE' ? 'online' : 'offline'}">
+                                ${node.status}
+                            </td>
+                            <td>${node.rssi} dBm</td>
+                            <td>${node.packetsSent}</td>
+                            <td>${node.packetsReceived}</td>
+                            <td>${node.packetDelivery.toFixed(2)}%</td>
+                        </tr>
+                    `).join('');
+
+                document.getElementById('message').textContent =
+                    'Backend Connected Successfully';
+
+            } catch (error) {
+                document.getElementById('message').textContent =
+                    'Backend connection failed: ' + error.message;
+            }
+        }
+
+        loadNetworkData();
+        setInterval(loadNetworkData, 5000);
+    </script>
+
+</body>
+</html>
