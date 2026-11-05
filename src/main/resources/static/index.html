@@ -4,8 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zigbee Network Monitoring</title>
+    <title>Zigbee Network Monitoring System</title>
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             padding: 30px;
@@ -13,64 +18,98 @@
             background: #101827;
             color: white;
         }
-        h1 { color: #38bdf8; }
+
+        h1 {
+            color: #38bdf8;
+        }
+
         .cards {
             display: flex;
             flex-wrap: wrap;
             gap: 18px;
             margin: 25px 0;
         }
+
         .card {
             background: #1e293b;
             padding: 22px;
             border-radius: 12px;
-            min-width: 150px;
+            min-width: 160px;
             flex: 1;
         }
+
         .value {
             font-size: 30px;
             font-weight: bold;
             margin-top: 10px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             background: #1e293b;
+            margin-top: 15px;
         }
+
         th, td {
             padding: 14px;
             border-bottom: 1px solid #334155;
             text-align: left;
         }
-        th { color: #38bdf8; }
-        .online { color: #4ade80; }
-        .offline { color: #f87171; }
-        #message { color: #fbbf24; }
+
+        th {
+            color: #38bdf8;
+        }
+
+        .online, .success {
+            color: #4ade80;
+        }
+
+        .offline, .failure {
+            color: #f87171;
+        }
+
+        #message, #jenkinsMessage {
+            color: #fbbf24;
+        }
+
+        h2 {
+            margin-top: 35px;
+        }
     </style>
 </head>
+
 <body>
 
     <h1>Zigbee Network Monitoring System</h1>
     <p>Spring Boot Backend Monitoring Dashboard</p>
+
     <p id="message">Connecting to backend...</p>
 
+    <h2>Network Overview</h2>
+
     <div class="cards">
+
         <div class="card">
             Total Nodes
             <div class="value" id="total">--</div>
         </div>
+
         <div class="card">
             Online Nodes
             <div class="value" id="online">--</div>
         </div>
+
         <div class="card">
             Failed Nodes
             <div class="value" id="failed">--</div>
         </div>
+
         <div class="card">
             Reliability
             <div class="value" id="reliability">--</div>
         </div>
+
     </div>
 
     <h2>Sensor Node Details</h2>
@@ -86,12 +125,27 @@
                 <th>Delivery %</th>
             </tr>
         </thead>
+
         <tbody id="nodeTable"></tbody>
     </table>
 
+    <h2>Jenkins Build Status</h2>
+
+    <div class="card">
+        <p>Job Name: <span id="jobName">Loading...</span></p>
+        <p>Build Number: <span id="buildNumber">Loading...</span></p>
+        <p>Build Status: <span id="buildStatus">Loading...</span></p>
+        <p id="jenkinsMessage"></p>
+    </div>
+
     <script>
+
+        // Load Zigbee Network Data
+
         async function loadNetworkData() {
+
             try {
+
                 const response = await fetch('/api/network');
 
                 if (!response.ok) {
@@ -100,9 +154,15 @@
 
                 const data = await response.json();
 
-                document.getElementById('total').textContent = data.totalNodes;
-                document.getElementById('online').textContent = data.onlineNodes;
-                document.getElementById('failed').textContent = data.failedNodes;
+                document.getElementById('total').textContent =
+                    data.totalNodes;
+
+                document.getElementById('online').textContent =
+                    data.onlineNodes;
+
+                document.getElementById('failed').textContent =
+                    data.failedNodes;
+
                 document.getElementById('reliability').textContent =
                     data.reliability.toFixed(2) + '%';
 
@@ -124,13 +184,56 @@
                     'Backend Connected Successfully';
 
             } catch (error) {
+
                 document.getElementById('message').textContent =
                     'Backend connection failed: ' + error.message;
+
             }
         }
 
+
+        // Load Jenkins Status
+
+        async function loadJenkinsStatus() {
+
+            try {
+
+                const response = await fetch('/api/jenkins/status');
+
+                if (!response.ok) {
+                    throw new Error('Jenkins API error');
+                }
+
+                const data = await response.json();
+
+                document.getElementById('jobName').textContent =
+                    data.jobName;
+
+                document.getElementById('buildNumber').textContent =
+                    data.buildNumber;
+
+                document.getElementById('buildStatus').textContent =
+                    data.buildStatus;
+
+                document.getElementById('jenkinsMessage').textContent =
+                    data.message;
+
+            } catch (error) {
+
+                document.getElementById('jenkinsMessage').textContent =
+                    'Jenkins status unavailable';
+
+            }
+        }
+
+
+        // Refresh Dashboard
+
         loadNetworkData();
+        loadJenkinsStatus();
+
         setInterval(loadNetworkData, 5000);
+
     </script>
 
 </body>
